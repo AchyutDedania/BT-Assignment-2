@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Blockchain with Pinning Attack Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Previous styles remain the same */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1f25 0%, #2c3e50 100%);
+            margin: 0;
+            padding: 20px;
+            color: #e4e6eb;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1, h3 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+        }
+
+        .wallets {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .wallet {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 16px;
+            margin: 10px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .wallet p {
+            margin: 5px 0;
+            font-size: 1.2em;
+        }
+
+        .wallet span {
+            font-weight: bold;
+            color: #6366f1;
+            font-size: 1.6em;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .miner-wallet {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .miner-wallet span {
+            color: #fff;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .danger-button {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .danger-button:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .blockchain, .pending-transactions, .mined-blocks {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .block, .pending-transaction, .mined-block {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .block:hover, .pending-transaction:hover, .mined-block:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .pinning-transaction {
+            border: 2px solid #ef4444;
+            background: linear-gradient(135deg, #450a0a 0%, #991b1b 100%);
+        }
+
+        .fee-info {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        pre {
+            font-family: 'Monaco', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #6366f1;
+            color: #e4e6eb;  /* Light color for better visibility */
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .block, .pending-transaction, .mined-block {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            color: #e4e6eb; /* Light color for better visibility */
+            overflow: hidden; /* Prevent overflow */
+            text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+            word-wrap: break-word; /* Break long words */
+            white-space: pre-wrap; /* Maintain spacing while allowing wrapping */
+        }
+
+        /* Additional styles for miner info section */
+        .miner-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .miner-info-label {
+            color: #8b5cf6;  /* Purple accent color */
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .miner-info-content {
+            color: #e4e6eb;
+            font-family: 'Monaco', monospace;
+            line-height: 1.6;
+        }
+
+        /* Style for the labels within miner info */
+        .info-label {
+            color: #a78bfa;  /* Lighter purple for labels */
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #e4e6eb;  /* Light color for values */
+            margin-left: 5px;
+        }
+
+        /* Modify the displayBlockchain function in your JavaScript to use these classes */
+        .block strong {
+            color: #6366f1;  /* Purple accent color */
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .block-info {
+            color: #e4e6eb;
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+
+        /* Additional P2P Network styles */
+        .peer-connection {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .peer-id {
+            color: #6366f1;
+            font-family: monospace;
+            padding: 5px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 4px;
+        }
+
+        .network-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-connected {
+            background-color: #10b981;
+        }
+
+        .status-disconnected {
+            background-color: #ef4444;
+        }
+
+        .copy-button {
+            background: rgba(99, 102, 241, 0.2);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            font-size: 0.8em;
+        }
+
+        .copy-button:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        #peerIdDisplay {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="network-status">
+        <span class="status-indicator" id="networkIndicator"></span>
+        <span id="networkStatus">Disconnected</span>
+    </div>
+
+    <div class="container">
+        <h1>P2P Blockchain Network</h1>
+
+        <!-- P2P Network Section -->
+    <div class="section">
+        <h3>Network Configuration</h3>
+        <div id="peerIdDisplay"></div>
+        <button class="copy-button" onclick="copyPeerId()">Copy Peer ID</button>
+        <input type="text" id="peerIdInput" placeholder="Enter Peer ID to connect">
+        <button onclick="connectToPeer()">Connect to Peer</button>
+    </div>
+
+    <!-- Add the new elements here -->
+    <div id="errorMessages" class="error-message" style="display: none;"></div>
+
+    <div class="section">
+        <h3>Connected Peers</h3>
+        <div id="connectedPeers"></div>
+        <div id="peerStatus"></div>
+    </div>
+
+    <div class="section">
+        <h3>Network Sync Status</h3>
+        <div id="syncStatus"></div>
+    </div>
+
+        <!-- Previous sections remain the same -->
+        <h1>Blockchain Pinning Attack Demo</h1>
+
+        <div class="section">
+            <h3>Users' Wallets</h3>
+            <div class="wallets">
+                <div class="wallet">
+                    <p><strong>User A</strong></p>
+                    <p><span id="walletA">10000</span> Coins</p>
+                </div>
+                <div class="wallet">
+                    <p><strong>User B</strong></p>
+                    <p><span id="walletB">10000</span> Coins</p>
+                </div>
+                <div class="wallet">
+                    <p><strong>User C</strong></p>
+                    <p><span id="walletC">10000</span> Coins</p>
+                </div>
+                <div class="wallet miner-wallet">
+                    <p><strong>Miner Rewards</strong></p>
+                    <p><span id="walletMiner">0</span> Coins</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Form -->
+        <div class="section">
+            <h3>Create a Transaction</h3>
+            <input type="text" id="sender" placeholder="Sender (A, B, or C)">
+            <input type="text" id="recipient" placeholder="Recipient (A, B, or C)">
+            <input type="number" id="amount" placeholder="Amount in BTC Coins">
+            <input type="number" id="fee" placeholder="Transaction Fee (default: 1 BTC)">
+            <button onclick="createTransaction()">Create Transaction</button>
+        </div>
+
+        <!-- Attack Control -->
+        <div class="section">
+            <h3>Pinning Attack Control</h3>
+            <button id="attackButton" class="danger-button" onclick="togglePinningAttack()">
+                Toggle Pinning Attack
+            </button>
+            <p style="text-align: center; margin-top: 10px; color: #666;">
+                Pinning attack creates high-fee transactions to prevent lower-fee transactions from being mined
+            </p>
+        </div>
+
+        <!-- Mining Section -->
+        <div class="section">
+            <h3>Mine Transactions</h3>
+            <button onclick="mineSelectedTransactions()">Mine Top-Fee Transactions</button>
+            <p style="text-align: center; margin-top: 10px; color: #666;">
+                Only the top 3 highest-fee transactions will be included in each block
+            </p>
+        </div>
+
+        <!-- Mined Blocks Section -->
+        <div class="section">
+            <h3>Mined Blocks (Not Yet Broadcasted)</h3>
+            <div id="minedBlocks" class="mined-blocks"></div>
+            <button onclick="broadcastSelectedBlocks()">Broadcast Selected Blocks</button>
+        </div>
+
+        <!-- Pending Transactions -->
+        <div class="section">
+            <h3>Pending Transactions</h3>
+            <div id="pendingTransactions" class="pending-transactions"></div>
+        </div>
+
+        <!-- Blockchain Display -->
+        <div class="section">
+            <h3>Blockchain</h3>
+            <div id="blockchain" class="blockchain"></div>
+        </div>
+    </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <script src="blockchainP2P.js"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
+</body>
+</html>
